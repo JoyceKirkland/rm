@@ -19,7 +19,7 @@ Mat ele;
 Mat mask;
 Mat dst;
 Mat inrange;
-Mat element = getStructuringElement(MORPH_RECT, Size(13, 13));
+Mat element = getStructuringElement(MORPH_RECT, Size(9, 9));
 
 int h_w;
 int w_h;
@@ -91,7 +91,7 @@ void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& de
             auto pixels_distance = depth_scale * p_depth_frame[depth_pixel_index];
 
             // Check if the depth value is invalid (<=0) or greater than the threashold
-            if (pixels_distance <= 0.f || pixels_distance > clipping_dist)
+            if (pixels_distance <= 0.6 || pixels_distance > clipping_dist)
             {
                 // Calculate the offset in other frame's buffer to current pixel
                 auto offset = depth_pixel_index * other_bpp;
@@ -192,7 +192,7 @@ int main() try
     rs2_stream align_to = find_stream_to_align(profile.get_streams());
     rs2::align align(align_to);
 
-    float depth_clipping_distance = 1.f;
+    float depth_clipping_distance = 0.8;
 
     while (1)
     {
@@ -222,20 +222,23 @@ int main() try
         //取深度图和彩色图
         frame color_frame = frameset.get_color_frame();
         frame depth_frame = frameset.get_depth_frame();
-        //frame depth_frame_1 = frameset.get_depth_frame().apply_filter(c);
+        frame depth_frame_1 = frameset.get_depth_frame().apply_filter(c);
         //获取宽高
         const int depth_w=aligned_depth_frame.as<video_frame>().get_width();
         const int depth_h=aligned_depth_frame.as<video_frame>().get_height();
         const int color_w=other_frame.as<video_frame>().get_width();
         const int color_h=other_frame.as<video_frame>().get_height();
+        //const int depth_w_1=depth_frame_1.as<video_frame>().get_width();
+        //const int depth_h_1=depth_frame_1.as<video_frame>().get_height();
 
         //创建OPENCV类型 并传入数据
         Mat depth_image(Size(depth_w,depth_h),
                         CV_16U,(void*)aligned_depth_frame.get_data(),Mat::AUTO_STEP);
-        //Mat depth_image_1(Size(depth_w,depth_h),
-          //                CV_8UC3,(void*)depth_frame_1.get_data(),Mat::AUTO_STEP);
+        //Mat depth_image_1(Size(depth_w_1,depth_h_1),
+        //                  CV_8UC3,(void*)depth_frame_1.get_data(),Mat::AUTO_STEP);
         Mat color_image(Size(color_w,color_h),
                         CV_8UC3,(void*)color_frame.get_data(),Mat::AUTO_STEP);
+        cvtColor(color_image,color_image,COLOR_BGR2RGB);
         //实现深度图对齐到彩色图
         //Mat result=align_Depth2Color(depth_image,color_image,profile);
         find_rect(color_image);
@@ -243,6 +246,7 @@ int main() try
         //显示
         imshow("depth_image",depth_image);
         imshow("color_image",color_image);
+        //imshow("depth_image_1",depth_image_1);
         //imshow("result",result);
         int key = waitKey(1);
         if(char(key) == 27)break;
