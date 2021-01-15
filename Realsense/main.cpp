@@ -179,7 +179,7 @@ bool profile_changed(const std::vector<rs2::stream_profile>& current, const std:
     }
     return false;
 }
-
+ 
 int main() try
 {
     colorizer c;   // 帮助着色深度图像
