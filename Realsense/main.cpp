@@ -19,7 +19,7 @@ Mat ele;
 Mat mask;
 Mat dst;
 Mat inrange;
-Mat element = getStructuringElement(MORPH_RECT, Size(9, 9));
+Mat element = getStructuringElement(MORPH_RECT, Size(11, 11));
 
 int h_w;
 int w_h;
@@ -91,7 +91,7 @@ void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& de
             auto pixels_distance = depth_scale * p_depth_frame[depth_pixel_index];
 
             // Check if the depth value is invalid (<=0) or greater than the threashold
-            if (pixels_distance <= 0.68 || pixels_distance > clipping_dist)
+            if (pixels_distance <= 0.69 || pixels_distance > clipping_dist)
             {
                 // Calculate the offset in other frame's buffer to current pixel
                 auto offset = depth_pixel_index * other_bpp;
@@ -246,7 +246,7 @@ int main() try
         find_rect(color_image);
         //measure_distance(color_image,result,Size(40,40),profile,find_rect(result));            //自定义窗口大小
         //显示
-        imshow("depth_image",depth_image);
+        //imshow("depth_image",depth_image);
         imshow("color_image",color_image);
         //imshow("depth_image_1",depth_image_1);
         //imshow("result",result);
