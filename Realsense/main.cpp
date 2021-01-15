@@ -19,18 +19,27 @@ Mat ele;
 Mat mask;
 Mat dst;
 Mat inrange;
-Mat element = getStructuringElement(MORPH_RECT, Size(11, 11));
+int ele_size=19;
+//int ele_size_Max=21;
+
+Mat element = getStructuringElement(MORPH_RECT, Size(ele_size, ele_size));
 
 float h_w;
 float w_h;
-int hw_min=0;//长宽比最小阈值
-int hw_min_Max=10;//长宽比最小阈值上限值
-int hw_max=0;//长宽比最大阈值
-int hw_max_Max=20;//长宽比最大阈值上限值
-int min_video_distance=69;//背景消除最小阈值
-int min_video_distance_Max=150;//背景消除最小阈值上限值
-int depth_clipping_distance_Max=200;//背景消除最大阈值上限值
-int rect_s=100;//识别出的矩形面积上限值
+int hw_min=81;//长宽比最小阈值//81
+int hw_min_Max=100;//长宽比最小阈值上限值
+int hw_max=122;//长宽比最大阈值//102
+int hw_max_Max=200;//长宽比最大阈值上限值
+
+int wh_min=81;//宽长比最小阈值
+int wh_min_Max=100;//宽长比最小阈值上限值
+int wh_max=122;//宽长比最大阈值
+int wh_max_Max=200;//宽长比最大阈值上限值
+
+int min_video_distance=69;//背景消除最短距离
+int min_video_distance_Max=150;//背景消除最短距离上限值
+int depth_clipping_distance=80;//背景消除最远距离
+int depth_clipping_distance_Max=200;//背景消除最远距离上限值
 
 //获取深度像素对应长度单位（米）的换算比例
 float get_depth_scale(device dev)
@@ -80,7 +89,7 @@ rs2_stream find_stream_to_align(const std::vector<rs2::stream_profile>& streams)
 
     return align_to;
 }
-void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale, float clipping_dist)
+void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale)
 {
     const uint16_t* p_depth_frame = reinterpret_cast<const uint16_t*>(depth_frame.get_data());
     uint8_t* p_other_frame = reinterpret_cast<uint8_t*>(const_cast<void*>(other_frame.get_data()));
@@ -99,7 +108,7 @@ void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& de
             auto pixels_distance = 100 * depth_scale * p_depth_frame[depth_pixel_index];
 
             // Check if the depth value is invalid (<=0) or greater than the threashold
-            if (pixels_distance <= 69 || pixels_distance > clipping_dist)
+            if (pixels_distance <= min_video_distance || pixels_distance > depth_clipping_distance)
             {
                 // Calculate the offset in other frame's buffer to current pixel
                 auto offset = depth_pixel_index * other_bpp;
@@ -134,23 +143,23 @@ RotatedRect find_rect(Mat frame)
         rect=minAreaRect(contours[i]);
         Point2f P[4];
         rect.points(P);
-        h_w=(rect.size.height/rect.size.width)*10;
-        w_h=(rect.size.width/rect.size.height)*10;
+        h_w=(rect.size.height/rect.size.width)*100;
+        w_h=(rect.size.width/rect.size.height)*100;
         //cout<<"h:"<<rect.size.height<<endl;
         //cout<<"w:"<<rect.size.width<<endl;
         char _hw[20],_wh[20];
         sprintf(_hw,"h_w=%0.2f",h_w);
-        sprintf(_wh,"_wh=%0.2f",_wh);
+        sprintf(_wh,"w_h=%0.2f",w_h);
         //if((h_w>0.99||h_w<1.01)&&((rect.size.width*rect.size.height)>8000.f))
-        if(((h_w>5&&h_w<15)||(w_h>5&&w_h<15))&&(rect.size.width*rect.size.height)/100>90.f)
+        if(((h_w>hw_min&&h_w<hw_max)&&(w_h>wh_min&&w_h<wh_max))&&(rect.size.width*rect.size.height)/100>90.f)
         {
             for(int j=0;j<=3;j++)
             {
                 line(frame,P[j],P[(j+1)%4],Scalar(255,255,255),2);
-
             }
-            putText(frame,_hw,Point(rect.center.x-20,rect.center.y-20),
-                FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
+            putText(frame,_hw,Point(rect.center.x-20,rect.center.y-20),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
+            putText(frame,_wh,Point(rect.center.x-50,rect.center.y-50),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
+
         }
     }
     //imshow("mask",ele);
@@ -210,9 +219,24 @@ int main() try
     rs2_stream align_to = find_stream_to_align(profile.get_streams());
     rs2::align align(align_to);
 
-    float depth_clipping_distance = 0.8*100;
+    //float depth_clipping_distance = 0.8*100;
 
-    while (1)
+    namedWindow("调试",WINDOW_GUI_EXPANDED);
+    //createTrackbar("背景消除最短距离","调试",&min_video_distance,min_video_distance_Max,NULL);
+    //createTrackbar("背景消除最远距离","调试",&depth_clipping_distance,depth_clipping_distance_Max,NULL);
+
+    //createTrackbar("ele_size","调试",&ele_size,ele_size_Max,NULL);
+
+    //createTrackbar("长宽比最小值","调试",&hw_min,hw_min_Max,NULL);
+    //createTrackbar("长宽比最大值","调试",&hw_max,hw_max_Max,NULL);
+
+    //createTrackbar("宽长比最小值","调试",&wh_min,wh_min_Max,NULL);
+    //createTrackbar("宽长比最大值","调试",&wh_max,wh_max_Max,NULL);
+    //min_video_distance//depth_clipping_distance
+    createTrackbar("矩形面积","调试",&min_video_distance,min_video_distance_Max,NULL);
+
+
+    for(;;)
     {
         frameset frameset = pipe.wait_for_frames();  //堵塞程序直到新的一帧捕获
         
@@ -234,7 +258,7 @@ int main() try
             continue;
         }
 
-        remove_background(other_frame, aligned_depth_frame, depth_scale, depth_clipping_distance);
+        remove_background(other_frame, aligned_depth_frame, depth_scale);
         //pip_stream = pip_stream.adjust_ratio({ static_cast<float>(aligned_depth_frame.get_width()),static_cast<float>(aligned_depth_frame.get_height()) });
 
         //取深度图和彩色图
@@ -263,7 +287,7 @@ int main() try
         //measure_distance(color_image,result,Size(40,40),profile,find_rect(result));            //自定义窗口大小
         //显示
         //imshow("depth_image",depth_image);
-        imshow("color_image",color_image);
+        imshow("调试",color_image);
         //imshow("depth_image_1",depth_image_1);
         //imshow("result",result);
         int key = waitKey(1);
