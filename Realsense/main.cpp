@@ -21,8 +21,8 @@ Mat dst;
 Mat inrange;
 Mat element = getStructuringElement(MORPH_RECT, Size(11, 11));
 
-int h_w;
-int w_h;
+float h_w;
+float w_h;
 
 //获取深度像素对应长度单位（米）的换算比例
 float get_depth_scale(device dev)
@@ -109,35 +109,43 @@ RotatedRect find_rect(Mat frame)
     
     cvtColor(frame,hsv,COLOR_BGR2HSV);
     inRange(hsv,Scalar(0,0,46),Scalar(180,30,200),inrange);
-    imshow("mask",inrange);
+    
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
     morphologyEx(inrange,ele, MORPH_OPEN, element);//形态学开运算
     //morphologyEx(ele,ele, MORPH_CLOSE, element);//形态学闭运算
 
-    Canny(ele,mask,20,114,3);//边缘检测
-    
+    Canny(ele,mask,20,114,7);//边缘检测
+    imshow("mask",mask);
     findContours(mask,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE,Point());//寻找并绘制轮廓
     
     vector<Moments>mu(contours.size());
     for(int i=0;i<contours.size();i++)//最小外接矩形
     {
-        drawContours(mask,contours,i,Scalar(255),2,8,hierarchy);
+        //drawContours(mask,contours,i,Scalar(255),2,8,hierarchy);
         rect=minAreaRect(contours[i]);
         Point2f P[4];
         rect.points(P);
         h_w=rect.size.height/rect.size.width;
         w_h=rect.size.width/rect.size.height;
-
-        if((h_w>0.99||h_w<1.01)&&((rect.size.width*rect.size.height)>8000.f))
+        //cout<<"h:"<<rect.size.height<<endl;
+        //cout<<"w:"<<rect.size.width<<endl;
+        char _hw[20],_wh[20];
+        sprintf(_hw,"h_w=%0.2f",h_w);
+        sprintf(_wh,"_wh=%0.2f",_wh);
+        //if((h_w>0.99||h_w<1.01)&&((rect.size.width*rect.size.height)>8000.f))
+        if(((h_w>0.5&&h_w<1.5)||(w_h>0.5&&w_h<1.5))&&(rect.size.width*rect.size.height)>9000.f)
         {
             for(int j=0;j<=3;j++)
             {
                 line(frame,P[j],P[(j+1)%4],Scalar(255,255,255),2);
+
             }
+            putText(frame,_hw,Point(rect.center.x-20,rect.center.y-20),
+                FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
         }
     }
-    
+    //imshow("mask",ele);
     return rect;
 }
 void measure_distance(Mat &color,Mat depth,Size range,pipeline_profile profile,RotatedRect RectRange)
