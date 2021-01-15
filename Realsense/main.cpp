@@ -23,6 +23,14 @@ Mat element = getStructuringElement(MORPH_RECT, Size(11, 11));
 
 float h_w;
 float w_h;
+int hw_min=0;//长宽比最小阈值
+int hw_min_Max=10;//长宽比最小阈值上限值
+int hw_max=0;//长宽比最大阈值
+int hw_max_Max=20;//长宽比最大阈值上限值
+int min_video_distance=69;//背景消除最小阈值
+int min_video_distance_Max=150;//背景消除最小阈值上限值
+int depth_clipping_distance_Max=200;//背景消除最大阈值上限值
+int rect_s=100;//识别出的矩形面积上限值
 
 //获取深度像素对应长度单位（米）的换算比例
 float get_depth_scale(device dev)
@@ -88,10 +96,10 @@ void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& de
         for (int x = 0; x < width; x++, ++depth_pixel_index)
         {
             // Get the depth value of the current pixel
-            auto pixels_distance = depth_scale * p_depth_frame[depth_pixel_index];
+            auto pixels_distance = 100 * depth_scale * p_depth_frame[depth_pixel_index];
 
             // Check if the depth value is invalid (<=0) or greater than the threashold
-            if (pixels_distance <= 0.69 || pixels_distance > clipping_dist)
+            if (pixels_distance <= 69 || pixels_distance > clipping_dist)
             {
                 // Calculate the offset in other frame's buffer to current pixel
                 auto offset = depth_pixel_index * other_bpp;
@@ -126,15 +134,15 @@ RotatedRect find_rect(Mat frame)
         rect=minAreaRect(contours[i]);
         Point2f P[4];
         rect.points(P);
-        h_w=rect.size.height/rect.size.width;
-        w_h=rect.size.width/rect.size.height;
+        h_w=(rect.size.height/rect.size.width)*10;
+        w_h=(rect.size.width/rect.size.height)*10;
         //cout<<"h:"<<rect.size.height<<endl;
         //cout<<"w:"<<rect.size.width<<endl;
         char _hw[20],_wh[20];
         sprintf(_hw,"h_w=%0.2f",h_w);
         sprintf(_wh,"_wh=%0.2f",_wh);
         //if((h_w>0.99||h_w<1.01)&&((rect.size.width*rect.size.height)>8000.f))
-        if(((h_w>0.5&&h_w<1.5)||(w_h>0.5&&w_h<1.5))&&(rect.size.width*rect.size.height)>9000.f)
+        if(((h_w>5&&h_w<15)||(w_h>5&&w_h<15))&&(rect.size.width*rect.size.height)/100>90.f)
         {
             for(int j=0;j<=3;j++)
             {
@@ -202,7 +210,7 @@ int main() try
     rs2_stream align_to = find_stream_to_align(profile.get_streams());
     rs2::align align(align_to);
 
-    float depth_clipping_distance = 0.8;
+    float depth_clipping_distance = 0.8*100;
 
     while (1)
     {
