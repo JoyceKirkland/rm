@@ -91,7 +91,7 @@ void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& de
             auto pixels_distance = depth_scale * p_depth_frame[depth_pixel_index];
 
             // Check if the depth value is invalid (<=0) or greater than the threashold
-            if (pixels_distance <= 0.6 || pixels_distance > clipping_dist)
+            if (pixels_distance <= 0.68 || pixels_distance > clipping_dist)
             {
                 // Calculate the offset in other frame's buffer to current pixel
                 auto offset = depth_pixel_index * other_bpp;
@@ -108,13 +108,14 @@ RotatedRect find_rect(Mat frame)
     //dst = Mat::zeros(frame.size(), CV_32FC3);
     
     cvtColor(frame,hsv,COLOR_BGR2HSV);
-    //inRange(hsv,Scalar(0,0,46),Scalar(180,30,200),inrange);
+    inRange(hsv,Scalar(0,0,46),Scalar(180,30,200),inrange);
+    imshow("mask",inrange);
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
-    morphologyEx(hsv,ele, MORPH_OPEN, element);//形态学开运算
-    morphologyEx(ele,ele, MORPH_CLOSE, element);//形态学闭运算
+    morphologyEx(inrange,ele, MORPH_OPEN, element);//形态学开运算
+    //morphologyEx(ele,ele, MORPH_CLOSE, element);//形态学闭运算
 
-    Canny(ele,mask,200,114,3);//边缘检测
+    Canny(ele,mask,20,114,3);//边缘检测
     
     findContours(mask,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE,Point());//寻找并绘制轮廓
     
@@ -127,7 +128,8 @@ RotatedRect find_rect(Mat frame)
         rect.points(P);
         h_w=rect.size.height/rect.size.width;
         w_h=rect.size.width/rect.size.height;
-        if(h_w==1||w_h==1)
+
+        if((h_w>0.99||h_w<1.01)&&((rect.size.width*rect.size.height)>8000.f))
         {
             for(int j=0;j<=3;j++)
             {
@@ -135,7 +137,7 @@ RotatedRect find_rect(Mat frame)
             }
         }
     }
-    imshow("ele",mask);
+    
     return rect;
 }
 void measure_distance(Mat &color,Mat depth,Size range,pipeline_profile profile,RotatedRect RectRange)
