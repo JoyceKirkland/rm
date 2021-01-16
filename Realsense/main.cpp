@@ -24,6 +24,8 @@ int ele_size=17;
 int ele_size_Max=21;
 
 Mat element = getStructuringElement(MORPH_RECT, Size(ele_size, ele_size));
+Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,0,4,0,0,-1,0);
+//Mat kernel = (Mat_<float>(3, 3) << 1,1,1,1,-8,1,1,1,1);
 
 float h_w;
 float w_h;
@@ -42,7 +44,7 @@ int min_video_distance_Max=150;//背景消除最短距离上限值
 int depth_clipping_distance=80;//背景消除最远距离
 int depth_clipping_distance_Max=200;//背景消除最远距离上限值
 
-int canny_th1=20;//20
+int canny_th1=180;//20
 int canny_th1_Max=300;
 int canny_th2=100;//100
 int canny_th2_Max=300;
@@ -129,6 +131,7 @@ RotatedRect find_rect(Mat frame)
 {
     RotatedRect rect;
     //dst = Mat::zeros(frame.size(), CV_32FC3);
+    
     morphologyEx(frame,ele, MORPH_OPEN, element);//形态学开运算
     morphologyEx(ele,ele, MORPH_CLOSE, element);//形态学闭运算
     cvtColor(ele,hsv,COLOR_BGR2HSV);
@@ -142,7 +145,9 @@ RotatedRect find_rect(Mat frame)
     imshow("dst1",dst1);
     Canny(dst1,mask,canny_th1,canny_th2,7);//边缘检测
     dst=mask.clone();
-    GaussianBlur(dst,dst,Size(5,5),3,3);
+    
+    filter2D(dst, dst, CV_8UC1, kernel);
+    GaussianBlur(dst,dst,Size(7,7),3,3);
     
     imshow("dst",dst);
     findContours(dst,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE,Point());//寻找并绘制轮廓
