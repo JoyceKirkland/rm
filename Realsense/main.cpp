@@ -18,9 +18,10 @@ Mat hsv;
 Mat ele;
 Mat mask;
 Mat dst;
+Mat dst1;
 Mat inrange;
-int ele_size=19;
-//int ele_size_Max=21;
+int ele_size=17;
+int ele_size_Max=21;
 
 Mat element = getStructuringElement(MORPH_RECT, Size(ele_size, ele_size));
 
@@ -40,6 +41,11 @@ int min_video_distance=69;//背景消除最短距离
 int min_video_distance_Max=150;//背景消除最短距离上限值
 int depth_clipping_distance=80;//背景消除最远距离
 int depth_clipping_distance_Max=200;//背景消除最远距离上限值
+
+int canny_th1=20;//20
+int canny_th1_Max=300;
+int canny_th2=100;//100
+int canny_th2_Max=300;
 
 //获取深度像素对应长度单位（米）的换算比例
 float get_depth_scale(device dev)
@@ -123,18 +129,23 @@ RotatedRect find_rect(Mat frame)
 {
     RotatedRect rect;
     //dst = Mat::zeros(frame.size(), CV_32FC3);
+    morphologyEx(frame,ele, MORPH_OPEN, element);//形态学开运算
+    morphologyEx(ele,ele, MORPH_CLOSE, element);//形态学闭运算
+    cvtColor(ele,hsv,COLOR_BGR2HSV);
     
-    cvtColor(frame,hsv,COLOR_BGR2HSV);
     inRange(hsv,Scalar(0,0,46),Scalar(180,30,200),inrange);
     
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
-    morphologyEx(inrange,ele, MORPH_OPEN, element);//形态学开运算
-    //morphologyEx(ele,ele, MORPH_CLOSE, element);//形态学闭运算
-
-    Canny(ele,mask,20,114,7);//边缘检测
-    imshow("mask",mask);
-    findContours(mask,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE,Point());//寻找并绘制轮廓
+    // morphologyEx(inrange,ele, MORPH_OPEN, element);//形态学开运算
+    dst1=inrange.clone();
+    imshow("dst1",dst1);
+    Canny(dst1,mask,canny_th1,canny_th2,7);//边缘检测
+    dst=mask.clone();
+    GaussianBlur(dst,dst,Size(5,5),3,3);
+    
+    imshow("dst",dst);
+    findContours(dst,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE,Point());//寻找并绘制轮廓
     
     vector<Moments>mu(contours.size());
     for(int i=0;i<contours.size();i++)//最小外接矩形
@@ -151,7 +162,7 @@ RotatedRect find_rect(Mat frame)
         sprintf(_hw,"h_w=%0.2f",h_w);
         sprintf(_wh,"w_h=%0.2f",w_h);
         //if((h_w>0.99||h_w<1.01)&&((rect.size.width*rect.size.height)>8000.f))
-        if(((h_w>hw_min&&h_w<hw_max)&&(w_h>wh_min&&w_h<wh_max))&&(rect.size.width*rect.size.height)/100>90.f)
+        if(((h_w>hw_min&&h_w<hw_max)&&(w_h>wh_min&&w_h<wh_max))&&(rect.size.width*rect.size.height)/100>95.f)
         {
             for(int j=0;j<=3;j++)
             {
@@ -222,8 +233,8 @@ int main() try
     //float depth_clipping_distance = 0.8*100;
 
     namedWindow("调试",WINDOW_GUI_EXPANDED);
-    //createTrackbar("背景消除最短距离","调试",&min_video_distance,min_video_distance_Max,NULL);
-    //createTrackbar("背景消除最远距离","调试",&depth_clipping_distance,depth_clipping_distance_Max,NULL);
+    createTrackbar("背景消除最短距离","调试",&min_video_distance,min_video_distance_Max,NULL);
+    createTrackbar("背景消除最远距离","调试",&depth_clipping_distance,depth_clipping_distance_Max,NULL);
 
     //createTrackbar("ele_size","调试",&ele_size,ele_size_Max,NULL);
 
@@ -233,9 +244,11 @@ int main() try
     //createTrackbar("宽长比最小值","调试",&wh_min,wh_min_Max,NULL);
     //createTrackbar("宽长比最大值","调试",&wh_max,wh_max_Max,NULL);
     //min_video_distance//depth_clipping_distance
-    createTrackbar("矩形面积","调试",&min_video_distance,min_video_distance_Max,NULL);
+    //createTrackbar("canny_th1","调试",&canny_th1,canny_th1_Max,NULL);
+    //createTrackbar("canny_th2","调试",&canny_th2,canny_th2_Max,NULL);
 
 
+    double t = (double)cv::getTickCount();//开始计时
     for(;;)
     {
         frameset frameset = pipe.wait_for_frames();  //堵塞程序直到新的一帧捕获
@@ -290,8 +303,12 @@ int main() try
         imshow("调试",color_image);
         //imshow("depth_image_1",depth_image_1);
         //imshow("result",result);
+        
         int key = waitKey(1);
         if(char(key) == 27)break;
+        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();//结束计时
+        int fps = int(1.0 / t);//转换为帧率
+        cout << "FPS: " << fps<<endl;//输出帧率
     }
     return 0;
 }
