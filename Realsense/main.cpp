@@ -24,8 +24,14 @@ int ele_size=17;
 int ele_size_Max=21;
 
 Mat element = getStructuringElement(MORPH_RECT, Size(ele_size, ele_size));
-Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,0,4,0,0,-1,0);
+//Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,0,4,0,0,-1,0);//目前较稳定，偶然会有些许抖动，基本不受杂质影响
 //Mat kernel = (Mat_<float>(3, 3) << 1,1,1,1,-8,1,1,1,1);
+//Mat kernel = (Mat_<float>(3, 3) << 0,1,0,1,-4,1,0,1,0);
+//Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,-1,4,-1,0,-1,0);
+Mat kernel = (Mat_<float>(3, 3) << -1,1,-1,1,8,-1,-1,1,-1);//能用，会抖
+//Mat kernel = (Mat_<float>(3, 3) << -1,-8,1,1,8,-1,-1,-8,1);//目前较稳定，偶然会抖，但是框得不太准
+//Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,0,16,0,0,3,0);//目前较稳定，会受到一定杂质影响
+
 
 float h_w;
 float w_h;
@@ -173,8 +179,8 @@ RotatedRect find_rect(Mat frame)
             {
                 line(frame,P[j],P[(j+1)%4],Scalar(255,255,255),2);
             }
-            putText(frame,_hw,Point(rect.center.x-20,rect.center.y-20),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
-            putText(frame,_wh,Point(rect.center.x-50,rect.center.y-50),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
+            //putText(frame,_hw,Point(rect.center.x-20,rect.center.y-20),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
+            //putText(frame,_wh,Point(rect.center.x-50,rect.center.y-50),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
 
         }
     }
@@ -302,7 +308,7 @@ int main() try
         //实现深度图对齐到彩色图
         //Mat result=align_Depth2Color(depth_image,color_image,profile);
         find_rect(color_image);
-        //measure_distance(color_image,result,Size(40,40),profile,find_rect(result));            //自定义窗口大小
+        //measure_distance(color_image,result,Size(40,40),profile,find_rect(color_image));            //自定义窗口大小
         //显示
         //imshow("depth_image",depth_image);
         imshow("调试",color_image);
