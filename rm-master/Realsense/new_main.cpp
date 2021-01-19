@@ -22,6 +22,7 @@
 #include <stdint.h>
 // 111
 //主机
+//笔记本
 using namespace cv;
 using namespace std;
 using namespace rs2;
