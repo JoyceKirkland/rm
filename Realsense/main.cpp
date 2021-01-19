@@ -28,8 +28,8 @@ Mat element = getStructuringElement(MORPH_RECT, Size(ele_size, ele_size));
 //Mat kernel = (Mat_<float>(3, 3) << 1,1,1,1,-8,1,1,1,1);
 //Mat kernel = (Mat_<float>(3, 3) << 0,1,0,1,-4,1,0,1,0);
 //Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,-1,4,-1,0,-1,0);
-Mat kernel = (Mat_<float>(3, 3) << -1,1,-1,1,8,-1,-1,1,-1);//能用，会抖
-//Mat kernel = (Mat_<float>(3, 3) << -1,-8,1,1,8,-1,-1,-8,1);//目前较稳定，偶然会抖，但是框得不太准
+//Mat kernel = (Mat_<float>(3, 3) << -1,1,-1,1,8,-1,-1,1,-1);//能用，会抖
+Mat kernel = (Mat_<float>(3, 3) << -1,-8,1,1,8,-1,-1,-8,1);//目前较稳定，偶然会抖，但是框得不太准
 //Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,0,16,0,0,3,0);//目前较稳定，会受到一定杂质影响
 
 
@@ -54,6 +54,8 @@ int canny_th1=180;//20
 int canny_th1_Max=300;
 int canny_th2=100;//100
 int canny_th2_Max=300;
+
+float focal_depth=0.62;
 
 //获取深度像素对应长度单位（米）的换算比例
 float get_depth_scale(device dev)
@@ -136,6 +138,7 @@ void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& de
 RotatedRect find_rect(Mat frame)
 {
     RotatedRect rect;
+    RotatedRect rect1;
     //dst = Mat::zeros(frame.size(), CV_32FC3);
     
     morphologyEx(frame,ele, MORPH_OPEN, element);//形态学开运算
@@ -175,30 +178,38 @@ RotatedRect find_rect(Mat frame)
         //if((h_w>0.99||h_w<1.01)&&((rect.size.width*rect.size.height)>8000.f))
         if(((h_w>hw_min&&h_w<hw_max)&&(w_h>wh_min&&w_h<wh_max))&&(rect.size.width*rect.size.height)/100>95.f)
         {
+            rect1=rect;
             for(int j=0;j<=3;j++)
             {
                 line(frame,P[j],P[(j+1)%4],Scalar(255,255,255),2);
             }
             //putText(frame,_hw,Point(rect.center.x-20,rect.center.y-20),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
             //putText(frame,_wh,Point(rect.center.x-50,rect.center.y-50),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
-
+            return rect1;
         }
     }
     //imshow("mask",ele);
-    return rect;
+    
 }
-void measure_distance(Mat &color,Mat depth,Size range,pipeline_profile profile,RotatedRect RectRange)
+void measure_distance(Mat &color,Mat depth,pipeline_profile profile,RotatedRect RectRange)
 { 
     float depth_scale = get_depth_scale(profile.get_device()); //获取深度像素与现实单位比例（D435默认1毫米）
+    double alpha=(90+RectRange.angle)*3.14159/180;
     Point center(RectRange.center.x,RectRange.center.y);                   //自定义图像中心点
     //Rect RectRange(center.x-range.width/2,center.y-range.height/2,
-    //               range.width,range.height);                  //自定义计算距离的范围
+    //               range.width,range.height);                    //自定义计算距离的范围
     //遍历该范围
     float distance_sum=0;
     int effective_pixel=0;
     
-    for(int y=RectRange.center.y-(RectRange.size.height/2);y<RectRange.center.y+(RectRange.size.height/2);y++){
-        for(int x=RectRange.center.x-(RectRange.size.width/2);x<RectRange.center.x+(RectRange.size.width/2);x++){
+    for(int y=RectRange.center.y;y<RectRange.center.y+RectRange.size.height;y++){
+        for(int x=RectRange.center.x;x<RectRange.center.x+RectRange.size.width;x++){
+            // for(int y=RectRange.center.y-(RectRange.size.height*cos(RectRange.angle)+RectRange.size.height*sin(RectRange.angle))/2;
+            //     y<RectRange.center.y+(RectRange.size.height*cos(RectRange.angle)+RectRange.size.height*sin(RectRange.angle))/2;y++)
+            // {
+            //     for(int x=RectRange.center.x-(RectRange.size.width*cos(RectRange.angle)+RectRange.size.height*sin(RectRange.angle)/2);
+            //         x<RectRange.center.x+(RectRange.size.width/2);x++)
+            //     {
             //如果深度图下该点像素不为0，表示有距离信息
             if(depth.at<uint16_t>(y,x)){
                 distance_sum+=depth_scale*depth.at<uint16_t>(y,x);
@@ -210,11 +221,48 @@ void measure_distance(Mat &color,Mat depth,Size range,pipeline_profile profile,R
     float effective_distance=(distance_sum/effective_pixel)*100;
     cout<<"目标距离："<<effective_distance<<" cm"<<endl;
     char distance_str[30];
+    char angle[20];
     sprintf(distance_str,"the distance is:%f cm",effective_distance);
+    sprintf(angle,"angle:%f ",RectRange.angle);
     //rectangle(color,RectRange,Scalar(0,0,255),2,8);
-    putText(color,(string)distance_str,Point(color.cols*0.02,color.rows*0.05),
+    putText(color,(string)distance_str,Point(RectRange.center.x-70,RectRange.center.y-40),
                 FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
+    putText(color,(string)angle,Point(RectRange.center.x,RectRange.center.y),
+                FONT_HERSHEY_PLAIN,2,Scalar(255,255,0),2,8);
+
 }
+void distance(RotatedRect rect,Mat frame,pipeline_profile profile)
+{
+    float depth_scale = get_depth_scale(profile.get_device()); //获取深度像素与现实单位比例（D435默认1毫米）
+    double alpha=(90+rect.angle)*3.141592/180;
+    //float _distance=(focal_depth*200/((rect.size.height/cos(alpha))*depth_scale));
+    float _distance=(focal_depth*200/((rect.size.height)*depth_scale));
+    char str_distance[20];
+    char str_height[20];
+    char str_width[20];
+    char str_cos_alpha[40];
+    //cout<<"alpha:" <<alpha<<endl;
+    //cout<<"cos(alpha):" <<cos(alpha)<<endl;
+    cout<<"rect.size.height:" <<rect.size.height<<endl;
+    cout<<"rect.size.width:" <<rect.size.width<<endl;
+    cout<<"rect.size.height/cos(alpha):" <<rect.size.height/cos(alpha)<<endl;
+    cout<<"??:" <<((rect.size.height/cos(alpha))*depth_scale)<<endl;
+    
+    sprintf(str_distance," %f mm",_distance);
+    sprintf(str_height,"height: %f ",rect.size.height);
+    sprintf(str_width,"width: %f ",rect.size.width);
+    sprintf(str_cos_alpha,"cos_alpha: %f ",cos(alpha));
+    putText(frame,(string)str_distance,Point(rect.center.x-70,rect.center.y-40),
+                FONT_HERSHEY_PLAIN,2,Scalar(255,255,0),2,8);
+    putText(frame,(string)str_height,Point(40,50),
+                FONT_HERSHEY_PLAIN,2,Scalar(255,0,255),2,8);
+    putText(frame,(string)str_width,Point(40,100),
+                FONT_HERSHEY_PLAIN,2,Scalar(255,0,255),2,8);                        
+    putText(frame,(string)str_cos_alpha,Point(40,150),
+                FONT_HERSHEY_PLAIN,2,Scalar(255,0,255),2,8);           
+
+}
+
 bool profile_changed(const std::vector<rs2::stream_profile>& current, const std::vector<rs2::stream_profile>& prev)
 {
     for (auto&& sp : prev)
@@ -294,8 +342,8 @@ int main() try
         const int depth_h=aligned_depth_frame.as<video_frame>().get_height();
         const int color_w=other_frame.as<video_frame>().get_width();
         const int color_h=other_frame.as<video_frame>().get_height();
-        //const int depth_w_1=depth_frame_1.as<video_frame>().get_width();
-        //const int depth_h_1=depth_frame_1.as<video_frame>().get_height();
+        const int depth_w_1=depth_frame_1.as<video_frame>().get_width();
+        const int depth_h_1=depth_frame_1.as<video_frame>().get_height();
 
         //创建OPENCV类型 并传入数据
         Mat depth_image(Size(depth_w,depth_h),
@@ -307,10 +355,11 @@ int main() try
         cvtColor(color_image,color_image,COLOR_BGR2RGB);
         //实现深度图对齐到彩色图
         //Mat result=align_Depth2Color(depth_image,color_image,profile);
-        find_rect(color_image);
-        //measure_distance(color_image,result,Size(40,40),profile,find_rect(color_image));            //自定义窗口大小
+        //find_rect(color_image);
+        distance(find_rect(color_image),color_image,profile);
+        //measure_distance(color_image,depth_image,profile,find_rect(color_image));            //自定义窗口大小
         //显示
-        //imshow("depth_image",depth_image);
+        imshow("depth_image",depth_image);
         imshow("调试",color_image);
         //imshow("depth_image_1",depth_image_1);
         //imshow("result",result);
