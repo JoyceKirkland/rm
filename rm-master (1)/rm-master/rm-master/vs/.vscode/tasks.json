@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",	/* 要与launch.json文件里的preLaunchTask的内容保持一致 */
+            "type": "shell",/* 定义任务是被作为进程运行还是在 shell 中作为命令运行，默认是shell，即是在终端中运行，因为终端执行的就是shell的脚本 */
+            "command": "g++",/* 这里填写你的编译器地址 */
+            "args": [
+                /* 说明整个项目所需的源文件路径(.cpp) */
+                "-g", 
+                "${file}", 
+                "-std=c++11", // 静态链接
+                "-o", 	/* 编译输出文件的存放路径 */
+                "${fileDirname}/${fileBasenameNoExtension}",/* 要与launch.json文件里的program的内容保持一致 */
+                "-I","${workspaceFolder}/armor_pre/",
+                //"-I","${workspaceFolder}/armor_test_avi/",
+                "-static-libgcc",
+                "-Wall",// 开启额外警告
+                /* 说明整个项目所需的头文件路径（.h）*/
+                "-I","${workspaceFolder}/",
+                "-I","/usr/local/include/",
+                "-I","/usr/local/include/opencv4/",
+                "-I","/usr/local/include/opencv4/opencv2/",
+                "/usr/local/lib/libopencv_*",	/* OpenCV的lib库 */
+            ]
+        }
+     ]
+}
