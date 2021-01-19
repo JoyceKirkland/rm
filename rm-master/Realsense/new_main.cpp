@@ -81,7 +81,7 @@ int main()
     // // The retunred object should be released with rs2_delete_config(...)
     rs2_config* config = rs2_create_config(&e);
     check_error(e);
-
+ 
     // // Request a specific configuration
     rs2_config_enable_stream(config, STREAM, STREAM_INDEX, WIDTH, HEIGHT, FORMAT, FPS, &e);
     check_error(e);
