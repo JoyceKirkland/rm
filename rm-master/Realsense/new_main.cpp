@@ -21,6 +21,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+
+#include "configure.h"
+
 // 111
 //主机
 //笔记本//????

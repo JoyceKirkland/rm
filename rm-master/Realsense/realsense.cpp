@@ -1,19 +1,21 @@
-#include <iostream>
-#include <sstream>
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <string>
+// #include <iostream>
+// #include <sstream>
+// #include <iostream>
+// #include <fstream>
+// #include <algorithm>
+// #include <string>
 
-#include<opencv2/imgproc/imgproc.hpp>
-#include<opencv2/core/core.hpp>
-#include<opencv2/highgui/highgui.hpp>
-#include<librealsense2/rs.hpp>
-#include<librealsense2/rsutil.h>
+// #include<opencv2/imgproc/imgproc.hpp>
+// #include<opencv2/core/core.hpp>
+// #include<opencv2/highgui/highgui.hpp>
+// #include<librealsense2/rs.hpp>
+// #include<librealsense2/rsutil.h>
 
-using namespace cv;
-using namespace std;
-using namespace rs2;
+#include"realsense.h"
+#include"/home/joyce/github/rm_e/rm/rm-master/configure.h"
+// using namespace cv;
+// using namespace std;
+// using namespace rs2;
 Mat hsv;
 Mat ele;
 Mat mask;
@@ -60,8 +62,11 @@ float move_y;
 float move_xy;
 float focal_depth=0.62;
 
+mineral::mineral(){};
+mineral::~mineral(){};
+
 //获取深度像素对应长度单位（米）的换算比例
-float get_depth_scale(device dev)
+float mineral:: get_depth_scale(device dev)
 {
     for (sensor& sensor : dev.query_sensors()) //检查设备的传感器
     {
@@ -73,7 +78,7 @@ float get_depth_scale(device dev)
     throw runtime_error("Device does not have a depth sensor");
 }
 //深度图对齐到彩色图函数
-rs2_stream find_stream_to_align(const std::vector<rs2::stream_profile>& streams)
+rs2_stream mineral::find_stream_to_align(const std::vector<rs2::stream_profile>& streams)
 {
     //Given a vector of streams, we try to find a depth stream and another stream to align depth with.
     //We prioritize color streams to make the view look better.
@@ -108,7 +113,8 @@ rs2_stream find_stream_to_align(const std::vector<rs2::stream_profile>& streams)
 
     return align_to;
 }
-void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale)
+
+void mineral::remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale)
 {
     const uint16_t* p_depth_frame = reinterpret_cast<const uint16_t*>(depth_frame.get_data());
     uint8_t* p_other_frame = reinterpret_cast<uint8_t*>(const_cast<void*>(other_frame.get_data()));
@@ -138,7 +144,7 @@ void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& de
         }
     }
 }
-RotatedRect find_rect(Mat frame)    
+RotatedRect mineral::find_rect(Mat frame)    
 {
     RotatedRect rect;
     RotatedRect rect1;
@@ -194,7 +200,7 @@ RotatedRect find_rect(Mat frame)
     //imshow("mask",ele);
     
 }
-void measure_distance(Mat &color,Mat depth,pipeline_profile profile,RotatedRect RectRange)
+/*void measure_distance(Mat &color,Mat depth,pipeline_profile profile,RotatedRect RectRange)
 { 
     float depth_scale = get_depth_scale(profile.get_device()); //获取深度像素与现实单位比例（D435默认1毫米）
     double alpha=(90+RectRange.angle)*3.14159/180;
@@ -233,7 +239,8 @@ void measure_distance(Mat &color,Mat depth,pipeline_profile profile,RotatedRect 
     putText(color,(string)angle,Point(RectRange.center.x,RectRange.center.y),
                 FONT_HERSHEY_PLAIN,2,Scalar(255,255,0),2,8);
 
-}
+}*/
+/*
 void distance(RotatedRect rect,Mat frame,pipeline_profile profile)
 {
     float depth_scale = get_depth_scale(profile.get_device()); //获取深度像素与现实单位比例（D435默认1毫米）
@@ -267,8 +274,8 @@ void distance(RotatedRect rect,Mat frame,pipeline_profile profile)
                 FONT_HERSHEY_PLAIN,2,Scalar(255,0,255),2,8);           
 
 }
-
-bool profile_changed(const std::vector<rs2::stream_profile>& current, const std::vector<rs2::stream_profile>& prev)
+*/
+bool mineral::profile_changed(const std::vector<rs2::stream_profile>& current, const std::vector<rs2::stream_profile>& prev)
 {
     for (auto&& sp : prev)
     {
@@ -282,7 +289,7 @@ bool profile_changed(const std::vector<rs2::stream_profile>& current, const std:
     return false;
 }
  
-int main() try
+void mineral::get_frame()
 {
     colorizer c;   // 帮助着色深度图像
     pipeline pipe;         //创建数据管道
@@ -340,9 +347,9 @@ int main() try
         //pip_stream = pip_stream.adjust_ratio({ static_cast<float>(aligned_depth_frame.get_width()),static_cast<float>(aligned_depth_frame.get_height()) });
 
         //取深度图和彩色图
-        frame color_frame = frameset.get_color_frame();
-        frame depth_frame = frameset.get_depth_frame();
-        frame depth_frame_1 = frameset.get_depth_frame().apply_filter(c);
+        color_frame = frameset.get_color_frame();
+        depth_frame = frameset.get_depth_frame();
+        depth_frame_1 = frameset.get_depth_frame().apply_filter(c);
         //获取宽高
         const int depth_w=aligned_depth_frame.as<video_frame>().get_width();
         const int depth_h=aligned_depth_frame.as<video_frame>().get_height();
@@ -376,15 +383,9 @@ int main() try
         int fps = int(1.0 / t);//转换为帧率
         cout << "FPS: " << fps<<endl;//输出帧率
     }
-    return 0;
+    //return 0;
 }
-catch (const rs2::error & e)
+void mineral::test()
 {
-    std::cerr << "RealSense error calling " << e.get_failed_function() << "(" << e.get_failed_args() << "):\n    " << e.what() << std::endl;
-    return EXIT_FAILURE;
-}
-catch (const std::exception & e)
-{
-    std::cerr << e.what() << std::endl;
-    return EXIT_FAILURE;
+    cout<<"testest"<<endl;
 }
