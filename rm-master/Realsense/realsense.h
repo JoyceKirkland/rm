@@ -10,7 +10,7 @@
 
 #define realsense.h
 
-#include "/home/joyce/github/rm_e/rm/rm-master/configure.h"
+#include "rm-master/configure.h"
 
 #endif 
 //using namespace cv;
