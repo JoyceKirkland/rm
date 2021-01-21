@@ -1,12 +1,12 @@
 /*
  * @Author: joyce
  * @Date: 2021-01-21 15:17:19
- * @LastEditTime: 2021-01-21 17:23:54
+ * @LastEditTime: 2021-01-21 20:03:36
  * @LastEditors: Please set LastEditors
  * @Description:: 
  */
 
-#include "/home/joyce/github/rm_e/rm/rm-master/configure.h"
+#include "rm-master/configure.h"
 #include "realsense.cpp"
 //#include "realsense.h"
 

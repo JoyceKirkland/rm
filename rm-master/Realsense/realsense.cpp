@@ -10,9 +10,8 @@
 // #include<opencv2/highgui/highgui.hpp>
 // #include<librealsense2/rs.hpp>
 // #include<librealsense2/rsutil.h>
-
 #include"realsense.h"
-#include"/home/joyce/github/rm_e/rm/rm-master/configure.h"
+#include"rm-master/configure.h"
 // using namespace cv;
 // using namespace std;
 // using namespace rs2;

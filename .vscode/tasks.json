@@ -22,7 +22,8 @@
                 "-I","/usr/local/include/opencv4/",
                 "-I","/usr/local/include/opencv4/opencv2/",
                 "/usr/local/lib/libopencv_*",   /* OpenCV的lib库 */
-                "/usr/local/lib/librealsense2.so" /*深度学习相机realsense2 D435的库*/
+                "/usr/local/lib/librealsense2.so" /*深度学习相机realsense2 D435的库*/,
+                "-I","${workspaceFolder}/rm-master/Realsense/"
             ]
         }
      ]
