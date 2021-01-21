@@ -55,6 +55,9 @@ int canny_th1_Max=300;
 int canny_th2=100;//100
 int canny_th2_Max=300;
 
+float move_x;
+float move_y;
+float move_xy;
 float focal_depth=0.62;
 
 //获取深度像素对应长度单位（米）的换算比例
@@ -135,7 +138,7 @@ void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& de
         }
     }
 }
-RotatedRect find_rect(Mat frame)
+RotatedRect find_rect(Mat frame)    
 {
     RotatedRect rect;
     RotatedRect rect1;
@@ -172,9 +175,9 @@ RotatedRect find_rect(Mat frame)
         w_h=(rect.size.width/rect.size.height)*100;
         //cout<<"h:"<<rect.size.height<<endl;
         //cout<<"w:"<<rect.size.width<<endl;
-        char _hw[20],_wh[20];
-        sprintf(_hw,"h_w=%0.2f",h_w);
-        sprintf(_wh,"w_h=%0.2f",w_h);
+        char _x[20],_y[20],xy_to_center[30];
+        sprintf(_x,"x=%0.2f",rect.center.x);
+        sprintf(_y,"y=%0.2f",rect.center.y);
         //if((h_w>0.99||h_w<1.01)&&((rect.size.width*rect.size.height)>8000.f))
         if(((h_w>hw_min&&h_w<hw_max)&&(w_h>wh_min&&w_h<wh_max))&&(rect.size.width*rect.size.height)/100>95.f)
         {
@@ -183,8 +186,8 @@ RotatedRect find_rect(Mat frame)
             {
                 line(frame,P[j],P[(j+1)%4],Scalar(255,255,255),2);
             }
-            //putText(frame,_hw,Point(rect.center.x-20,rect.center.y-20),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
-            //putText(frame,_wh,Point(rect.center.x-50,rect.center.y-50),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
+            putText(frame,_x,Point(rect.center.x-20,rect.center.y-20),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
+            putText(frame,_y,Point(rect.center.x-20,rect.center.y-50),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
             return rect1;
         }
     }
@@ -235,6 +238,8 @@ void distance(RotatedRect rect,Mat frame,pipeline_profile profile)
 {
     float depth_scale = get_depth_scale(profile.get_device()); //获取深度像素与现实单位比例（D435默认1毫米）
     double alpha=(90+rect.angle)*3.141592/180;
+    float frame_move_x=(fabs)(frame.cols/2-rect.center.x);
+    move_x=frame_move_x*depth_scale/focal_depth;
     //float _distance=(focal_depth*200/((rect.size.height/cos(alpha))*depth_scale));
     float _distance=(focal_depth*200/((rect.size.height)*depth_scale));
     char str_distance[20];
@@ -288,7 +293,7 @@ int main() try
     float depth_scale = get_depth_scale(profile.get_device());
     rs2_stream align_to = find_stream_to_align(profile.get_streams());
     rs2::align align(align_to);
-
+    
     //float depth_clipping_distance = 0.8*100;
 
     namedWindow("调试",WINDOW_GUI_EXPANDED);
@@ -311,7 +316,7 @@ int main() try
     for(;;)
     {
         frameset frameset = pipe.wait_for_frames();  //堵塞程序直到新的一帧捕获
-        
+        //frame src=rs2_extract_frame(frameset,)
         if (profile_changed(pipe.get_active_profile().get_streams(), profile.get_streams()))
         {
             //If the profile was changed, update the align object, and also get the new device's depth scale
@@ -325,6 +330,7 @@ int main() try
         rs2::video_frame other_frame = processed.first(align_to);
         rs2::depth_frame aligned_depth_frame = processed.get_depth_frame();
 
+        frameset.get_data();
         if (!aligned_depth_frame || !other_frame)
         {
             continue;
@@ -355,8 +361,8 @@ int main() try
         cvtColor(color_image,color_image,COLOR_BGR2RGB);
         //实现深度图对齐到彩色图
         //Mat result=align_Depth2Color(depth_image,color_image,profile);
-        //find_rect(color_image);
-        distance(find_rect(color_image),color_image,profile);
+        find_rect(color_image);
+        //distance(find_rect(color_image),color_image,profile);
         //measure_distance(color_image,depth_image,profile,find_rect(color_image));            //自定义窗口大小
         //显示
         imshow("depth_image",depth_image);
