@@ -10,7 +10,7 @@
 #include "realsense.cpp"
 //#include "realsense.h"
 
-
+//笔记本更改test
 int main() try
 {
     mineral min;
