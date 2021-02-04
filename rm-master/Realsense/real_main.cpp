@@ -5,12 +5,12 @@
  * @LastEditors: Please set LastEditors
  * @Description:: 
  */
-
+ 
 #include "rm-master/configure.h"
 #include "realsense.cpp"
 //#include "realsense.h"
 
-//笔记本更改test
+//笔记本更改
 //主机更改test
 int main() try
 {
