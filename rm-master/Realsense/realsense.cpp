@@ -25,12 +25,12 @@ int ele_size=17;
 int ele_size_Max=21;
 
 Mat element = getStructuringElement(MORPH_RECT, Size(ele_size, ele_size));
-//Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,0,4,0,0,-1,0);//目前较稳定，偶然会有些许抖动，基本不受杂质影响
+Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,0,4,0,0,-1,0);//目前较稳定，偶然会有些许抖动，基本不受杂质影响
 //Mat kernel = (Mat_<float>(3, 3) << 1,1,1,1,-8,1,1,1,1);
 //Mat kernel = (Mat_<float>(3, 3) << 0,1,0,1,-4,1,0,1,0);
 //Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,-1,4,-1,0,-1,0);
 //Mat kernel = (Mat_<float>(3, 3) << -1,1,-1,1,8,-1,-1,1,-1);//能用，会抖
-Mat kernel = (Mat_<float>(3, 3) << -1,-8,1,1,8,-1,-1,-8,1);//目前较稳定，偶然会抖，但是框得不太准
+//Mat kernel = (Mat_<float>(3, 3) << -1,-8,1,1,8,-1,-1,-8,1);//目前较稳定，偶然会抖，但是框得不太准
 //Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,0,16,0,0,3,0);//目前较稳定，会受到一定杂质影响
 
 
@@ -151,14 +151,14 @@ RotatedRect mineral::find_rect(Mat frame)
     
     morphologyEx(frame,ele, MORPH_OPEN, element);//形态学开运算
     morphologyEx(ele,ele, MORPH_CLOSE, element);//形态学闭运算
-    cvtColor(ele,hsv,COLOR_BGR2HSV);
+    cvtColor(ele,hsv,COLOR_BGRA2GRAY);
     
-    inRange(hsv,Scalar(0,0,46),Scalar(180,30,200),inrange);
+    //inRange(hsv,Scalar(26,43,46),Scalar(34,255,255),inrange);
     
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
     // morphologyEx(inrange,ele, MORPH_OPEN, element);//形态学开运算
-    dst1=inrange.clone();
+    dst1=hsv.clone();
     imshow("dst1",dst1);
     Canny(dst1,mask,canny_th1,canny_th2,7);//边缘检测
     dst=mask.clone();
@@ -166,9 +166,12 @@ RotatedRect mineral::find_rect(Mat frame)
     filter2D(dst, dst, CV_8UC1, kernel);
     GaussianBlur(dst,dst,Size(7,7),3,3);
     
-    imshow("dst",dst);
-    findContours(dst,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE,Point());//寻找并绘制轮廓
     
+
+    imshow("dst",dst);
+    //imshow("inrange",inrange);
+    findContours(dst,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE,Point());//寻找并绘制轮廓
+    //inRange(dst,Scalar(26,43,46),Scalar(34,255,255),inrange);
     vector<Moments>mu(contours.size());
     for(int i=0;i<contours.size();i++)//最小外接矩形
     {
@@ -371,7 +374,8 @@ void mineral::get_frame()
         //distance(find_rect(color_image),color_image,profile);
         //measure_distance(color_image,depth_image,profile,find_rect(color_image));            //自定义窗口大小
         //显示
-        imshow("depth_image",depth_image);
+
+        //imshow("depth_image",depth_image);
         imshow("调试",color_image);
         //imshow("depth_image_1",depth_image_1);
         //imshow("result",result);
