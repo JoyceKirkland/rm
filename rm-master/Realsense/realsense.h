@@ -11,7 +11,7 @@
 #define realsense.h
 
 #include "rm-master/configure.h"
-
+#include"serialport.h"
 #endif 
 //using namespace cv;
 //using namespace std;

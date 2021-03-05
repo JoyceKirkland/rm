@@ -12,7 +12,7 @@
                 "-std=c++11", // 静态链接
                 "-o",   /* 编译输出文件的存放路径 */
                 "${fileDirname}/${fileBasenameNoExtension}",/* 要与launch.json文件里的program的内容保持一致 */
-                "-I","${workspaceFolder}/armor_pre/",
+                //"-I","${workspaceFolder}/armor_pre/",
                 //"-I","${workspaceFolder}/armor_test_avi/",
                 "-static-libgcc",
                 "-Wall",// 开启额外警告
@@ -23,7 +23,8 @@
                 "-I","/usr/local/include/opencv4/opencv2/",
                 "/usr/local/lib/libopencv_*",   /* OpenCV的lib库 */
                 "/usr/local/lib/librealsense2.so" /*深度学习相机realsense2 D435的库*/,
-                "-I","${workspaceFolder}/rm-master/Realsense/"
+                "-I","${workspaceFolder}/rm-master/Realsense/",
+                "-I","${workspaceFolder}/rm-master/"
             ]
         }
      ]

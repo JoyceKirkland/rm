@@ -1,20 +1,20 @@
 /*
  * @Author: joyce
  * @Date: 2021-01-21 15:17:19
- * @LastEditTime: 2021-01-21 20:21:15
+ * @LastEditTime: 2021-03-05 15:25:20
  * @LastEditors: Please set LastEditors
  * @Description:: 
  */
  
 #include "rm-master/configure.h"
 #include "realsense.cpp"
-//#include "realsense.h"
-
+// #include "serialport.h"
 //笔记本更改
 //主机更改test
 int main() try
 {
     mineral min;
+    // SerialPort serialport;
     min.get_frame();
     //min.test();
     //cout<<"????"<<endl;

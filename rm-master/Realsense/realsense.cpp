@@ -12,6 +12,8 @@
 // #include<librealsense2/rsutil.h>
 #include"realsense.h"
 #include"rm-master/configure.h"
+#include"serialport.cpp"
+
 // using namespace cv;
 // using namespace std;
 // using namespace rs2;
@@ -198,6 +200,7 @@ RotatedRect mineral::find_rect(Mat frame)
             putText(frame,_y,Point(rect.center.x-20,rect.center.y-50),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
             return rect1;
         }
+        SerialPort::RMserialWrite(rect.center.x,rect.center.y);
     }
     //imshow("mask",ele);
     
