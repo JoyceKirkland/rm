@@ -48,7 +48,7 @@ int wh_min_Max=100;//宽长比最小阈值上限值
 int wh_max=122;//宽长比最大阈值
 int wh_max_Max=200;//宽长比最大阈值上限值
 
-int min_video_distance=69;//背景消除最短距离
+int min_video_distance=40;//背景消除最短距离
 int min_video_distance_Max=150;//背景消除最短距离上限值
 int depth_clipping_distance=80;//背景消除最远距离
 int depth_clipping_distance_Max=200;//背景消除最远距离上限值
@@ -169,7 +169,6 @@ RotatedRect mineral::find_rect(Mat frame)
     GaussianBlur(dst,dst,Size(7,7),3,3);
     
     
-
     imshow("dst",dst);
     //imshow("inrange",inrange);
     findContours(dst,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE,Point());//寻找并绘制轮廓

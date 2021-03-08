@@ -14,7 +14,7 @@
 int main() try
 {
     mineral min;
-    // SerialPort serialport;
+    SerialPort serialport;
     min.get_frame();
     //min.test();
     //cout<<"????"<<endl;
