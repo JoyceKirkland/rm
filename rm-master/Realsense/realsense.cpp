@@ -23,7 +23,7 @@ Mat mask;
 Mat dst;
 Mat dst1;
 Mat inrange;
-int ele_size=17;
+int ele_size=15;
 int ele_size_Max=21;
 
 Mat element = getStructuringElement(MORPH_RECT, Size(ele_size, ele_size));
@@ -38,19 +38,19 @@ Mat kernel = (Mat_<float>(3, 3) << 0,-1,0,0,4,0,0,-1,0);//目前较稳定，偶�
 
 float h_w;
 float w_h;
-int hw_min=81;//长宽比最小阈值//81
+int hw_min=41;//长宽比最小阈值//81
 int hw_min_Max=100;//长宽比最小阈值上限值
-int hw_max=122;//长宽比最大阈值//102
+int hw_max=61;//长宽比最大阈值//102
 int hw_max_Max=200;//长宽比最大阈值上限值
 
-int wh_min=81;//宽长比最小阈值
+int wh_min=41;//宽长比最小阈值
 int wh_min_Max=100;//宽长比最小阈值上限值
-int wh_max=122;//宽长比最大阈值
+int wh_max=61;//宽长比最大阈值
 int wh_max_Max=200;//宽长比最大阈值上限值
 
-int min_video_distance=40;//背景消除最短距离
+int min_video_distance=66;//背景消除最短距离
 int min_video_distance_Max=150;//背景消除最短距离上限值
-int depth_clipping_distance=80;//背景消除最远距离
+int depth_clipping_distance=71;//背景消除最远距离
 int depth_clipping_distance_Max=200;//背景消除最远距离上限值
 
 int canny_th1=180;//20
@@ -188,7 +188,8 @@ RotatedRect mineral::find_rect(Mat frame)
         sprintf(_x,"x=%0.2f",rect.center.x);
         sprintf(_y,"y=%0.2f",rect.center.y);
         //if((h_w>0.99||h_w<1.01)&&((rect.size.width*rect.size.height)>8000.f))
-        if(((h_w>hw_min&&h_w<hw_max)&&(w_h>wh_min&&w_h<wh_max))&&(rect.size.width*rect.size.height)/100>95.f)
+        //if(((h_w>hw_min&&h_w<hw_max)&&(w_h>wh_min&&w_h<wh_max))&&(rect.size.width*rect.size.height)/100>95.f)
+        if((rect.size.width*rect.size.height)/100>70.f)
         {
             rect1=rect;
             for(int j=0;j<=3;j++)
@@ -199,7 +200,7 @@ RotatedRect mineral::find_rect(Mat frame)
             putText(frame,_y,Point(rect.center.x-20,rect.center.y-50),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
             return rect1;
         }
-        SerialPort::RMserialWrite(rect.center.x,rect.center.y);
+        //SerialPort::RMserialWrite(rect.center.x,rect.center.y);
     }
     //imshow("mask",ele);
     
