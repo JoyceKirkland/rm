@@ -10,7 +10,7 @@
 
 #define realsense.h
 
-#include "rm-master/configure.h"
+#include "rm-eng_version2/configure.h"
 #include"serialport.h"
 #endif 
 //using namespace cv;

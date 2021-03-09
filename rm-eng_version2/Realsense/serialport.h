@@ -1,7 +1,7 @@
 #ifndef SERIALPORT_H
 #define SERIALPORT_H
 
-#include "rm-master/configure.h"
+#include "rm-eng_version2/configure.h"
 // #include "control.h"
 /** ------------------------------------------------------**
   @brief: 串口部分参数

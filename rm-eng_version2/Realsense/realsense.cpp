@@ -11,7 +11,7 @@
 // #include<librealsense2/rs.hpp>
 // #include<librealsense2/rsutil.h>
 #include"realsense.h"
-#include"rm-master/configure.h"
+#include"rm-eng_version2/configure.h"
 #include"serialport.cpp"
 
 // using namespace cv;
