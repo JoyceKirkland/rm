@@ -21,7 +21,7 @@ Mat hsv;
 Mat ele;
 Mat mask;
 Mat dst;
-Mat dst1;
+Mat dst1; 
 Mat inrange;
 int ele_size=15;
 int ele_size_Max=21;
