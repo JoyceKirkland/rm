@@ -23,7 +23,7 @@ Mat mask;
 Mat dst;
 Mat dst1; 
 Mat inrange;
-int ele_size=15;
+int ele_size=13;
 int ele_size_Max=21;
 
 Mat element = getStructuringElement(MORPH_RECT, Size(ele_size, ele_size));
