@@ -155,6 +155,7 @@ void SerialPort::RMserialWrite(float rect_x,float rect_y)
     11：CRC
     12：帧尾
     */
+    //cout<<"x:"<<rect_x<<",y:"<<rect_y<<endl;
     write(fd, g_write_buf, sizeof(g_write_buf));
 #if SHOW_SERIAL_INFORMATION == 1
 

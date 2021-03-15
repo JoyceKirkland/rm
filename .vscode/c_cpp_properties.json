@@ -7,7 +7,8 @@
                 "/usr/local/include/",
                 "/usr/local/include/opencv4/",
                 "/usr/local/include/opencv4/opencv2/",
-                "/usr/local/include/librealsense2/",	 /*深度学习相机realsense2 D435的库*/
+                //"/usr/local/include/librealsense2/",	 /*深度学习相机realsense2 D435的库*/
+                "/usr/include/librealsense2",
                 "${workspaceFolder}/rm-eng_version2/Realsense/"
             ],
             "defines": [],

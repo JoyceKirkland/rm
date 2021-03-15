@@ -48,9 +48,9 @@ int wh_min_Max=100;//宽长比最小阈值上限值
 int wh_max=61;//宽长比最大阈值
 int wh_max_Max=200;//宽长比最大阈值上限值
 
-int min_video_distance=66;//背景消除最短距离
+//int min_video_distance=66;//背景消除最短距离
 int min_video_distance_Max=150;//背景消除最短距离上限值
-int depth_clipping_distance=71;//背景消除最远距离
+//int depth_clipping_distance=71;//背景消除最远距离
 //int depth_clipping_distance=min_video_distance+24;//背景消除最远距离
 
 int depth_clipping_distance_Max=200;//背景消除最远距离上限值
@@ -117,8 +117,8 @@ rs2_stream mineral::find_stream_to_align(const std::vector<rs2::stream_profile>&
     return align_to;
 }
 
-//void mineral::remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale,int min_video_distance,int depth_clipping_distance)
-void mineral::remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale)
+void mineral::remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale,int min_video_distance,int depth_clipping_distance)
+//void mineral::remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale)
 {
     const uint16_t* p_depth_frame = reinterpret_cast<const uint16_t*>(depth_frame.get_data());
     uint8_t* p_other_frame = reinterpret_cast<uint8_t*>(const_cast<void*>(other_frame.get_data()));
@@ -172,10 +172,7 @@ RotatedRect mineral::find_rect(Mat frame)
     GaussianBlur(dst,dst,Size(7,7),3,3);
     
     
-    //imshow("dst",dst);
-    //imshow("inrange",inrange);
     findContours(dst,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE,Point());//寻找并绘制轮廓
-    //inRange(dst,Scalar(26,43,46),Scalar(34,255,255),inrange);
     vector<Moments>mu(contours.size());
     for(int i=0;i<contours.size();i++)//最小外接矩形
     {
@@ -199,90 +196,18 @@ RotatedRect mineral::find_rect(Mat frame)
             {
                 line(frame,P[j],P[(j+1)%4],Scalar(255,255,255),2);
             }
+            
             putText(frame,_x,Point(rect.center.x-20,rect.center.y-20),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
             putText(frame,_y,Point(rect.center.x-20,rect.center.y-50),FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
+
+            SerialPort::RMserialWrite(rect.center.x,rect.center.y);
             return rect1;
         }
-        //SerialPort::RMserialWrite(rect.center.x,rect.center.y);
+        
     }
     //imshow("mask",ele);
     
 }
-/*void measure_distance(Mat &color,Mat depth,pipeline_profile profile,RotatedRect RectRange)
-{ 
-    float depth_scale = get_depth_scale(profile.get_device()); //获取深度像素与现实单位比例（D435默认1毫米）
-    double alpha=(90+RectRange.angle)*3.14159/180;
-    Point center(RectRange.center.x,RectRange.center.y);                   //自定义图像中心点
-    //Rect RectRange(center.x-range.width/2,center.y-range.height/2,
-    //               range.width,range.height);                    //自定义计算距离的范围
-    //遍历该范围
-    float distance_sum=0;
-    int effective_pixel=0;
-    
-    for(int y=RectRange.center.y;y<RectRange.center.y+RectRange.size.height;y++){
-        for(int x=RectRange.center.x;x<RectRange.center.x+RectRange.size.width;x++){
-            // for(int y=RectRange.center.y-(RectRange.size.height*cos(RectRange.angle)+RectRange.size.height*sin(RectRange.angle))/2;
-            //     y<RectRange.center.y+(RectRange.size.height*cos(RectRange.angle)+RectRange.size.height*sin(RectRange.angle))/2;y++)
-            // {
-            //     for(int x=RectRange.center.x-(RectRange.size.width*cos(RectRange.angle)+RectRange.size.height*sin(RectRange.angle)/2);
-            //         x<RectRange.center.x+(RectRange.size.width/2);x++)
-            //     {
-            //如果深度图下该点像素不为0，表示有距离信息
-            if(depth.at<uint16_t>(y,x)){
-                distance_sum+=depth_scale*depth.at<uint16_t>(y,x);
-                effective_pixel++;
-            }
-        }
-    }
-    cout<<"遍历完成，有效像素点:"<<effective_pixel<<endl;
-    float effective_distance=(distance_sum/effective_pixel)*100;
-    cout<<"目标距离："<<effective_distance<<" cm"<<endl;
-    char distance_str[30];
-    char angle[20];
-    sprintf(distance_str,"the distance is:%f cm",effective_distance);
-    sprintf(angle,"angle:%f ",RectRange.angle);
-    //rectangle(color,RectRange,Scalar(0,0,255),2,8);
-    putText(color,(string)distance_str,Point(RectRange.center.x-70,RectRange.center.y-40),
-                FONT_HERSHEY_PLAIN,2,Scalar(0,255,0),2,8);
-    putText(color,(string)angle,Point(RectRange.center.x,RectRange.center.y),
-                FONT_HERSHEY_PLAIN,2,Scalar(255,255,0),2,8);
-
-}*/
-/*
-void distance(RotatedRect rect,Mat frame,pipeline_profile profile)
-{
-    float depth_scale = get_depth_scale(profile.get_device()); //获取深度像素与现实单位比例（D435默认1毫米）
-    double alpha=(90+rect.angle)*3.141592/180;
-    float frame_move_x=(fabs)(frame.cols/2-rect.center.x);
-    move_x=frame_move_x*depth_scale/focal_depth;
-    //float _distance=(focal_depth*200/((rect.size.height/cos(alpha))*depth_scale));
-    float _distance=(focal_depth*200/((rect.size.height)*depth_scale));
-    char str_distance[20];
-    char str_height[20];
-    char str_width[20];
-    char str_cos_alpha[40];
-    //cout<<"alpha:" <<alpha<<endl;
-    //cout<<"cos(alpha):" <<cos(alpha)<<endl;
-    cout<<"rect.size.height:" <<rect.size.height<<endl;
-    cout<<"rect.size.width:" <<rect.size.width<<endl;
-    cout<<"rect.size.height/cos(alpha):" <<rect.size.height/cos(alpha)<<endl;
-    cout<<"??:" <<((rect.size.height/cos(alpha))*depth_scale)<<endl;
-    
-    sprintf(str_distance," %f mm",_distance);
-    sprintf(str_height,"height: %f ",rect.size.height);
-    sprintf(str_width,"width: %f ",rect.size.width);
-    sprintf(str_cos_alpha,"cos_alpha: %f ",cos(alpha));
-    putText(frame,(string)str_distance,Point(rect.center.x-70,rect.center.y-40),
-                FONT_HERSHEY_PLAIN,2,Scalar(255,255,0),2,8);
-    putText(frame,(string)str_height,Point(40,50),
-                FONT_HERSHEY_PLAIN,2,Scalar(255,0,255),2,8);
-    putText(frame,(string)str_width,Point(40,100),
-                FONT_HERSHEY_PLAIN,2,Scalar(255,0,255),2,8);                        
-    putText(frame,(string)str_cos_alpha,Point(40,150),
-                FONT_HERSHEY_PLAIN,2,Scalar(255,0,255),2,8);           
-
-}
-*/
 bool mineral::profile_changed(const std::vector<rs2::stream_profile>& current, const std::vector<rs2::stream_profile>& prev)
 {
     for (auto&& sp : prev)
@@ -311,9 +236,9 @@ void mineral::get_frame()
     
     //float depth_clipping_distance = 0.8*100;
 
-    namedWindow("调试",WINDOW_GUI_EXPANDED);
-    createTrackbar("背景消除最短距离","调试",&min_video_distance,min_video_distance_Max,NULL);
-    createTrackbar("背景消除最远距离","调试",&depth_clipping_distance,depth_clipping_distance_Max,NULL);
+    //namedWindow("调试",WINDOW_GUI_EXPANDED);
+    //createTrackbar("背景消除最短距离","调试",&min_video_distance,min_video_distance_Max,NULL);
+    //createTrackbar("背景消除最远距离","调试",&depth_clipping_distance,depth_clipping_distance_Max,NULL);
 
     //createTrackbar("ele_size","调试",&ele_size,ele_size_Max,NULL);
 
@@ -365,14 +290,14 @@ void mineral::get_frame()
         const int color_h=other_frame.as<video_frame>().get_height();
         const int depth_w_1=depth_frame_1.as<video_frame>().get_width();
         const int depth_h_1=depth_frame_1.as<video_frame>().get_height();
-        cout<<"distance: "<<aligned_depth_frame.get_distance(depth_w/2,depth_h/2)<<"m"<<endl;
+        //cout<<"distance: "<<aligned_depth_frame.get_distance(depth_w/2,depth_h/2)<<"m"<<endl;
 
-        //int min_distance=aligned_depth_frame.get_distance(depth_w/2,depth_h/2)*100;
+        int min_distance=aligned_depth_frame.get_distance(depth_w/2,depth_h/2)*100;
 
-        //int max_distance=min_distance+24;
+        int max_distance=min_distance+2;
 
-        //remove_background(other_frame, aligned_depth_frame, depth_scale,min_distance,max_distance);
-        remove_background(other_frame, aligned_depth_frame, depth_scale);
+        remove_background(other_frame, aligned_depth_frame, depth_scale,min_distance,max_distance);
+        //remove_background(other_frame, aligned_depth_frame, depth_scale);
 
         //创建OPENCV类型 并传入数据
         Mat depth_image(Size(depth_w,depth_h),
