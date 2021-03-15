@@ -1,7 +1,7 @@
 /*
  * @Author: joyce
  * @Date: 2021-01-21 15:17:19
- * @LastEditTime: 2021-03-12 16:57:19
+ * @LastEditTime: 2021-03-15 20:11:04
  * @LastEditors: Please set LastEditors
  * @Description:: 
  */
@@ -13,7 +13,7 @@
 //主机更改test
 int main() try
 {
-    mineral min;
+    mineral min;  
     SerialPort serialport;
     min.get_frame();
     //min.test();

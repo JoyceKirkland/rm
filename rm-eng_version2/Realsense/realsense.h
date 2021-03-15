@@ -35,6 +35,8 @@ public:
     rs2_stream find_stream_to_align(const std::vector<rs2::stream_profile>& streams);
     float get_depth_scale(device dev);
     void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale);
+    //void remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale,int min_video_distance,int depth_clipping_distance);
+
     RotatedRect find_rect(Mat frame);
     void get_frame();
     void test();

@@ -13,6 +13,8 @@
 #include <librealsense2/h/rs_option.h>
 #include <librealsense2/h/rs_frame.h>
 #include<librealsense2/rsutil.h>
+#include <librealsense2/hpp/rs_frame.hpp>
+
 /*-------------------------------------------*/
 
 

@@ -51,6 +51,8 @@ int wh_max_Max=200;//宽长比最大阈值上限值
 int min_video_distance=66;//背景消除最短距离
 int min_video_distance_Max=150;//背景消除最短距离上限值
 int depth_clipping_distance=71;//背景消除最远距离
+//int depth_clipping_distance=min_video_distance+24;//背景消除最远距离
+
 int depth_clipping_distance_Max=200;//背景消除最远距离上限值
 
 int canny_th1=180;//20
@@ -115,6 +117,7 @@ rs2_stream mineral::find_stream_to_align(const std::vector<rs2::stream_profile>&
     return align_to;
 }
 
+//void mineral::remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale,int min_video_distance,int depth_clipping_distance)
 void mineral::remove_background(rs2::video_frame& other_frame, const rs2::depth_frame& depth_frame, float depth_scale)
 {
     const uint16_t* p_depth_frame = reinterpret_cast<const uint16_t*>(depth_frame.get_data());
@@ -161,7 +164,7 @@ RotatedRect mineral::find_rect(Mat frame)
     vector<Vec4i> hierarchy;
     // morphologyEx(inrange,ele, MORPH_OPEN, element);//形态学开运算
     dst1=hsv.clone();
-    imshow("dst1",dst1);
+    //imshow("dst1",dst1);
     Canny(dst1,mask,canny_th1,canny_th2,7);//边缘检测
     dst=mask.clone();
     
@@ -169,7 +172,7 @@ RotatedRect mineral::find_rect(Mat frame)
     GaussianBlur(dst,dst,Size(7,7),3,3);
     
     
-    imshow("dst",dst);
+    //imshow("dst",dst);
     //imshow("inrange",inrange);
     findContours(dst,contours,hierarchy,RETR_EXTERNAL,CHAIN_APPROX_NONE,Point());//寻找并绘制轮廓
     //inRange(dst,Scalar(26,43,46),Scalar(34,255,255),inrange);
@@ -324,7 +327,7 @@ void mineral::get_frame()
     //createTrackbar("canny_th2","调试",&canny_th2,canny_th2_Max,NULL);
 
 
-    double t = (double)cv::getTickCount();//开始计时
+    //double t = (double)cv::getTickCount();//开始计时
     for(;;)
     {
         frameset frameset = pipe.wait_for_frames();  //堵塞程序直到新的一帧捕获
@@ -348,7 +351,7 @@ void mineral::get_frame()
             continue;
         }
 
-        remove_background(other_frame, aligned_depth_frame, depth_scale);
+        
         //pip_stream = pip_stream.adjust_ratio({ static_cast<float>(aligned_depth_frame.get_width()),static_cast<float>(aligned_depth_frame.get_height()) });
 
         //取深度图和彩色图
@@ -362,6 +365,14 @@ void mineral::get_frame()
         const int color_h=other_frame.as<video_frame>().get_height();
         const int depth_w_1=depth_frame_1.as<video_frame>().get_width();
         const int depth_h_1=depth_frame_1.as<video_frame>().get_height();
+        cout<<"distance: "<<aligned_depth_frame.get_distance(depth_w/2,depth_h/2)<<"m"<<endl;
+
+        //int min_distance=aligned_depth_frame.get_distance(depth_w/2,depth_h/2)*100;
+
+        //int max_distance=min_distance+24;
+
+        //remove_background(other_frame, aligned_depth_frame, depth_scale,min_distance,max_distance);
+        remove_background(other_frame, aligned_depth_frame, depth_scale);
 
         //创建OPENCV类型 并传入数据
         Mat depth_image(Size(depth_w,depth_h),
@@ -385,9 +396,9 @@ void mineral::get_frame()
         
         int key = waitKey(1);
         if(char(key) == 27)break;
-        t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();//结束计时
-        int fps = int(1.0 / t);//转换为帧率
-        cout << "FPS: " << fps<<endl;//输出帧率
+        //t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();//结束计时
+        //int fps = int(1.0 / t);//转换为帧率
+        //cout << "FPS: " << fps<<endl;//输出帧率
     }
     //return 0;
 }

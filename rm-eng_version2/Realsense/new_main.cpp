@@ -1,7 +1,7 @@
 /*
  * @Author: joyce
  * @Date: 2021-01-19 14:12:34
- * @LastEditTime: 2021-01-20 22:03:23
+ * @LastEditTime: 2021-03-15 17:15:04
  * @LastEditors: Please set LastEditors
  * @Description:: 
  */
@@ -15,6 +15,7 @@
 #include <librealsense2/h/rs_pipeline.h>
 #include <librealsense2/h/rs_option.h>
 #include <librealsense2/h/rs_frame.h>
+#include <librealsense2/hpp/rs_frame.hpp>
 #include<opencv2/imgproc/imgproc.hpp>
 #include<opencv2/core/core.hpp>
 #include<opencv2/highgui/highgui.hpp>
@@ -240,9 +241,12 @@ int main()
             check_error(e);
 
             // Query the distance from the camera to the object in the center of the image
-            float dist_to_center = rs2_depth_frame_get_distance(frame, width/2, height/2, &e);
+            //float dist_to_center = rs2_depth_frame_get_distance(frame, width/2, height/2, &e);
             check_error(e);
+            //auto processed = align.process(frameset);
 
+            rs2::depth_frame depth = framess.get_depth_frame();
+            float dist_to_center=depth.get_distance(width/2,height/2);
             auto r = rs2_get_frame_data(frame, &e);
             char str_distance[20];
             sprintf(str_distance,"%.3f m",dist_to_center);
